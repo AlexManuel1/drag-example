@@ -1,38 +1,35 @@
 import { createContext, ReactNode, useState } from "react";
+import { Tool, NodeData, NodeMap, GroupData, GroupMap, genereateNodeKey, generateGroupKey } from "../util";
 
 type ContextType = {
+    tool: Tool,
     isDragging: boolean,
     toggleIsDragging: (b: boolean) => void,
-    selected: string[],
-    updateSelected: (s: string[]) => void,
-    nodes: NodeRecord,
-    addNode: (n: Node) => void,
-    updateNode: (s: string, n: Node) => void
-}
-type Node = {
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    outline: string
+    selected: Set<string>,
+    updateSelected: (s: Set<string>) => void,
+    nodesMap: NodeMap,
+    groupsMap: GroupMap,
+    addNode: (n: NodeData) => void,
+    updateNode: (s: string, n: NodeData) => void
 }
 
 export const CanvasContext = createContext<ContextType>({
+    tool: Tool.Select,
     isDragging: false,
     toggleIsDragging: (b: boolean) => {},
-    selected: [],
-    updateSelected: (s: string[]) => {},
-    nodes: {},
-    addNode: (n: Node) => {},
-    updateNode: (s: string, n: Node) => {}
+    selected: new Set(),
+    updateSelected: (s: Set<string>) => {},
+    nodesMap: {},
+    groupsMap: {},
+    addNode: (n: NodeData) => {},
+    updateNode: (s: string, n: NodeData) => {}
 });
-
-type NodeRecord = Record<string, Node>;
 
 export const CanvasProvider = ({ children }: { children: ReactNode }) => {
     const [isDragging, setIsDragging] = useState(false);
-    const [selected, setSelected] = useState<string[]>([]);
-    const [nodes, setNodes] = useState<NodeRecord>({
+    const [selected, setSelected] = useState<Set<string>>(new Set());
+    const [tool, setTool] = useState(Tool.Select);
+    const [nodesMap, setNodesMap] = useState<NodeMap>({
         "1": {
             x: 100,
             y: 100,
@@ -48,32 +45,47 @@ export const CanvasProvider = ({ children }: { children: ReactNode }) => {
             outline: "black"
         }
     });
+    const [groupsMap, setGroupsMap] = useState<GroupMap>({
+        "1": {
+            nodes: new Set("1")
+        },
+        "2": {
+            nodes: new Set("2")
+        }
+    });
 
     const toggleIsDragging = (b: boolean) => setIsDragging(b);
-    const updateSelected = (s: string[]) => setSelected(s);
-    const addNode = (n: Node) => {
-        const key = Object.keys(nodes).length + 1;
-        setNodes({...nodes, [key.toString()] : n});
+    const updateSelected = (s: Set<string>) => setSelected(s);
+
+    const addNode = (n: NodeData) => {
+        const nodeKey = genereateNodeKey(nodesMap);
+        const groupKey = generateGroupKey(groupsMap);
+        setNodesMap({...nodesMap, [nodeKey] : n});
+        setGroupsMap({...groupsMap, [groupKey] : { 
+            nodes: new Set(nodeKey) 
+        }});
     }
-    const updateNode = (s: string, n: Node) => {
-        let updatedNodes: NodeRecord = {};
-        for (const key in nodes) {
+    const updateNode = (s: string, n: NodeData) => {
+        let updatedNodes: NodeMap = {};
+        for (const key in nodesMap) {
             if (key === s) {
                 updatedNodes[key] = n;
             } else {
-                updatedNodes[key] = nodes[key];
+                updatedNodes[key] = nodesMap[key];
             }
         }
-        setNodes(updatedNodes);
+        setNodesMap(updatedNodes);
     }
 
     return (
         <CanvasContext.Provider value={{
+            tool,
             isDragging,
             toggleIsDragging,
             selected,
             updateSelected,
-            nodes,
+            nodesMap,
+            groupsMap,
             addNode,
             updateNode
         }}>
