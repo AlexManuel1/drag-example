@@ -1,27 +1,23 @@
 import { useContext, useEffect, useState } from "react"
 import { CanvasContext } from "../contexts/CanvasContext"
 import { Tool, NodeData } from "../util"
+import useMousePosition from "../hooks/useMousePosition"
 
 type NodeProps = {
     id: string,
     nodeData: NodeData
 }
 
-type MousePosition = {
-    x: number,
-    y: number
-}
-
 const Node = (props: NodeProps) => {
 
-    const { toggleIsDragging, isDragging, updateSelected, updateNode, nodesMap, selected, tool } = useContext(CanvasContext)
+    const { toggleIsDragging, isDragging, updateSelected, updateNode, nodesMap, selected, tool, selectTool } = useContext(CanvasContext);
     const {x, y, width, height, outline} = props.nodeData;
     const id = props.id;
-    const [initialMousePosition, setInitialMousePosition] = useState<MousePosition | null>(null);
+    const [initialMousePosition, setInitialMousePosition] = useMousePosition();
 
     useEffect(() => {
         // ensure "drag" and "endDrag" functions get the newest state
-        if (tool === Tool.Select && isDragging && selected.has(id)) {
+        if (tool === Tool.Move && isDragging && selected.has(id)) {
             document.addEventListener("mousemove", drag);
             document.addEventListener("mouseup", endDrag);
         }
@@ -49,9 +45,10 @@ const Node = (props: NodeProps) => {
         document.removeEventListener("mouseup", endDrag);
     }
 
-    const startDrag = <T extends React.MouseEvent>(e: T) => {
+    const startDrag = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
+        selectTool(Tool.Move);
         toggleIsDragging(true);
         updateSelected(new Set(id));
         setInitialMousePosition({ x: e.clientX, y: e.clientY });
@@ -64,7 +61,7 @@ const Node = (props: NodeProps) => {
             width={width}
             height={height}
             fill="white"
-            stroke={outline}
+            // stroke={outline}
             key={id}
             onMouseDown={startDrag}
         />

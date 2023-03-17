@@ -1,14 +1,16 @@
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import { CanvasContext } from "../contexts/CanvasContext";
 import Node from "./Node";
 import NodeGroup from "./NodeGroup";
+import useMousePosition from "../hooks/useMousePosition";
+import useRectangleSelection from "../hooks/useRectangleSelection";
 
 const Canvas = () => {
-
-    const { nodesMap, addNode, selected } = useContext(CanvasContext);
+    const { toggleIsDragging, isDragging, selected } = useContext(CanvasContext);
+    const { startRectangleSelection, rectangleSelection } = useRectangleSelection();
 
     useEffect(() => {
-        //console.log(selected);
+        console.log(selected);
     }, [selected]);
 
     return (
@@ -17,11 +19,21 @@ const Canvas = () => {
             xmlns="http://www.w3.org/2000/svg"
             width="1000"
             height="1000"
+            onMouseDown={startRectangleSelection}
         >
             <NodeGroup />
-            {Object.entries(nodesMap).map(([nodeKey, node]) => {
-                return <Node nodeData={node} key={nodeKey} id={nodeKey} />;
-            })}
+            {
+                rectangleSelection && 
+                <rect 
+                    x={rectangleSelection.x} 
+                    y={rectangleSelection.y} 
+                    width={rectangleSelection.width} 
+                    height={rectangleSelection.height}
+                    stroke={rectangleSelection.outlineColor}
+                    fill="transparent"
+                    strokeDasharray="3 2"
+                />
+            }
         </svg>
     )
 }

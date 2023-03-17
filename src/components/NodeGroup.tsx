@@ -1,20 +1,28 @@
 import { useEffect, useContext, useState } from "react";
 import { CanvasContext } from "../contexts/CanvasContext";
-import { NodeData, GroupMap, NodeMap } from "../util";
+import { GroupMap } from "../util";
 import Node from './Node';
 
 const NodeGroup = () => {
 
-    const { groupsMap, nodesMap } = useContext(CanvasContext);
-    const [ groupedNodeData, setGroupedNodeData ] = useState<NodeMap[][]>([]);
+    const { groupsMap, nodesMap, selected } = useContext(CanvasContext);
+    const [ groupedNodeData, setGroupedNodeData ] = useState<JSX.Element[]>([]);
 
-    const mapGroupDataToNodeData = (groups: GroupMap): NodeMap[][] => {
-        let arrayOfNodeGroups = []
-        for (const groupData of Object.values(groups)) {
-            let nodeGroup = []
-            for (const node of groupData.nodes) {
-                nodeGroup.push({node: nodesMap[node]});
-            }
+    const setIsEqual = <T extends any>(set1: Set<T>, set2: Set<T>) => {
+        return set1.size === set2.size && [...set1].every((x) => set2.has(x));
+    }
+
+    const createNodeJSXFromGroupData = (groups: GroupMap): JSX.Element[] => {
+        let arrayOfNodeGroups = [];
+        for (const [groupKey, groupData] of Object.entries(groups)) {
+            // turn groupData.nodes into an array and map it to JSX
+            let nodeGroup = 
+                <g key={groupKey} stroke={setIsEqual(groupData.nodes, selected) ? "blue" : "black"}>
+                    {[...groupData.nodes].map((nodeKey) => {
+                        const nodeData = nodesMap[nodeKey];
+                        return <Node nodeData={nodeData} key={nodeKey} id={nodeKey}/>
+                    })}
+                </g>;
             arrayOfNodeGroups.push(nodeGroup);
         }
         return arrayOfNodeGroups;
@@ -23,20 +31,12 @@ const NodeGroup = () => {
     //const [mapGroupToNode, setMapGroupToNode] = useState<NodeData[][]>([]);
 
     useEffect(() => {
-        setGroupedNodeData(mapGroupDataToNodeData(groupsMap));
+        setGroupedNodeData(createNodeJSXFromGroupData(groupsMap));
     }, [groupsMap, nodesMap]);
  
     return (
         <>
-            {groupedNodeData.map((nodeDataArray, index) => 
-                <g key={index}>
-                    {nodeDataArray.map(nodeData => {
-                        const nodeKey = Object.keys(nodeData)[0];
-                        const node = Object.values(nodeData)[0];
-                        return <Node nodeData={node} key={nodeKey} id={nodeKey}/>
-                    })}
-                </g>
-            )}
+            {groupedNodeData}
         </>
     )
 }
