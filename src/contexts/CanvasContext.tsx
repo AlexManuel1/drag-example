@@ -78,6 +78,7 @@ export const CanvasProvider = ({ children }: { children: ReactNode }) => {
                 updatedNodes[key] = nodesMap[key];
             }
         }
+        console.log("updateNode function: ", updatedNodes);
         setNodesMap(updatedNodes);
     }
     const updateGroupsMapFromSelected = () => {

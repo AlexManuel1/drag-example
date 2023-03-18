@@ -17,18 +17,16 @@ const NodeGroup = () => {
         for (const [groupKey, groupData] of Object.entries(groups)) {
             // turn groupData.nodes into an array and map it to JSX
             let nodeGroup = 
-                <g key={groupKey} stroke={setIsEqual(groupData.nodes, selected) ? "blue" : "black"}>
+                <svg key={groupKey} stroke={setIsEqual(groupData.nodes, selected) ? "blue" : "black"}>
                     {[...groupData.nodes].map((nodeKey) => {
                         const nodeData = nodesMap[nodeKey];
                         return <Node nodeData={nodeData} key={nodeKey} id={nodeKey}/>
                     })}
-                </g>;
+                </svg>;
             arrayOfNodeGroups.push(nodeGroup);
         }
         return arrayOfNodeGroups;
     }
-
-    //const [mapGroupToNode, setMapGroupToNode] = useState<NodeData[][]>([]);
 
     useEffect(() => {
         setGroupedNodeData(createNodeJSXFromGroupData(groupsMap));

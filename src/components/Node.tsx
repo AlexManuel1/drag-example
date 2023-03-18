@@ -8,29 +8,45 @@ type NodeProps = {
     nodeData: NodeData
 }
 
+type MousePosition = {
+    x: number,
+    y: number
+}
+
+type NodeInitialPositions = {
+    string: MousePosition
+}
+
 const Node = (props: NodeProps) => {
 
     const { toggleIsDragging, isDragging, updateSelected, updateNode, nodesMap, selected, tool, selectTool } = useContext(CanvasContext);
     const {x, y, width, height, outline} = props.nodeData;
     const id = props.id;
     const [initialMousePosition, setInitialMousePosition] = useMousePosition();
-
+    const [initialNodePositions, setInitialNodePositions] = useState<NodeInitialPositions[]>([]);
+    
     useEffect(() => {
         // ensure "drag" and "endDrag" functions get the newest state
         if (tool === Tool.Move && isDragging && selected.has(id)) {
             document.addEventListener("mousemove", drag);
             document.addEventListener("mouseup", endDrag);
         }
-    }, [isDragging]);
+    }, [isDragging, nodesMap, selected]);
 
     const drag = (e: MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
         const deltaX = e.clientX - initialMousePosition!.x;
         const deltaY = e.clientY - initialMousePosition!.y;
-        const newPositionX = x + deltaX;
-        const newPositionY = y + deltaY;
         for (const key of selected) {
+            // we need to save initial mouse positions in an object
+            // key: initialmouseposition
+            console.log("key: ", key);
+            console.log("nodesMap[key]: ", nodesMap[key]);
+            console.log("deltaX: ", deltaX);
+            console.log("deltaY: ", deltaY);
+            const newPositionX = nodesMap[key].x + deltaX;
+            const newPositionY = nodesMap[key].y + deltaY;
             const updatedNode = {...nodesMap[key], x: newPositionX, y: newPositionY};
             updateNode(key, updatedNode);
         }
@@ -39,7 +55,8 @@ const Node = (props: NodeProps) => {
     const endDrag = (e: MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        updateSelected(new Set());
+        //updateSelected(new Set());
+        setInitialMousePosition(null);
         toggleIsDragging(false);
         document.removeEventListener("mousemove", drag);
         document.removeEventListener("mouseup", endDrag);
@@ -50,7 +67,10 @@ const Node = (props: NodeProps) => {
         e.stopPropagation();
         selectTool(Tool.Move);
         toggleIsDragging(true);
-        updateSelected(new Set(id));
+        // check if rectangular selection contains current node
+        if (!selected.has(id)) {
+            updateSelected(new Set(id));
+        }
         setInitialMousePosition({ x: e.clientX, y: e.clientY });
     }
 
@@ -61,7 +81,7 @@ const Node = (props: NodeProps) => {
             width={width}
             height={height}
             fill="white"
-            // stroke={outline}
+            stroke={selected.has(id) ? "blue" : outline}
             key={id}
             onMouseDown={startDrag}
         />

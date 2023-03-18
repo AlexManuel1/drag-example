@@ -6,7 +6,7 @@ import useMousePosition from "../hooks/useMousePosition";
 import useRectangleSelection from "../hooks/useRectangleSelection";
 
 const Canvas = () => {
-    const { toggleIsDragging, isDragging, selected } = useContext(CanvasContext);
+    const { toggleIsDragging, isDragging, selected, nodesMap } = useContext(CanvasContext);
     const { startRectangleSelection, rectangleSelection } = useRectangleSelection();
 
     useEffect(() => {
@@ -21,7 +21,10 @@ const Canvas = () => {
             height="1000"
             onMouseDown={startRectangleSelection}
         >
-            <NodeGroup />
+            {/* <NodeGroup /> */}
+            {Object.entries(nodesMap).map(([nodeKey, node]) => {
+                return <Node nodeData={node} key={nodeKey} id={nodeKey} />;
+            })}
             {
                 rectangleSelection && 
                 <rect 
